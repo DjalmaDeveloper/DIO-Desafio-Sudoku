@@ -3,13 +3,10 @@ package br.com.dio;
 import br.com.dio.model.Board;
 import br.com.dio.model.Space;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Scanner;
-import java.util.stream.Collectors;
+import java.util.*;
 import java.util.stream.Stream;
 
+import static br.com.dio.util.BoardTemplate.BOARD_TEMPLATE;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static java.util.stream.Collectors.toMap;
@@ -55,6 +52,7 @@ public class Main {
             }
         }
     }
+
     // Métodos de cada opção do jogo
     private static void startGame(Map<String, String> positions) {
         if(nonNull(board)){ // SE o board não estiver nulo
@@ -66,10 +64,10 @@ public class Main {
         for(int i = 0; i < BOARD_LIMIT; i++){
             spaces.add(new ArrayList<>());
             for(int j = 0; j < BOARD_LIMIT; j++){
-                String positionConfig = positions.get("%s, %s".formatted(i, j)); // Pegando posição fornecida pelo usuário
-                int expected = Integer.parseInt(positionConfig.split(",")[0]); // Pegando o número do valor para a posição
-                boolean fixed = Boolean.parseBoolean(positionConfig.split(",")[1]); // Pegando o valor que indica se o espaço é fixo ou não
-                Space currentSpace = new Space(expected, fixed); // Objeto criado (Espaço[Space])
+                var positionConfig = positions.get("%s,%s".formatted(i, j)); // Pegando posição fornecida pelo usuário
+                var expected = Integer.parseInt(positionConfig.split(",")[0]); // Pegando o número do valor para a posição
+                var fixed = Boolean.parseBoolean(positionConfig.split(",")[1]); // Pegando o valor que indica se o espaço é fixo ou não
+                var currentSpace = new Space(expected, fixed); // Objeto criado (Espaço[Space])
                 spaces.get(i).add(currentSpace);
             }
         }
@@ -101,26 +99,81 @@ public class Main {
             return;
         }
 
-        System.out.println("Informe a coluna em que o número será inserido");
+        System.out.println("Informe a coluna em que o número será removido");
         int col = runUntilGetValidNumber(0, 8);
-        System.out.println("Informe a linha em que o número será inserido");
+        System.out.println("Informe a linha em que o número será removido");
         int row = runUntilGetValidNumber(0, 8);
-        System.out.printf("Informe o número que vai entrar na posição [%s,%s]\n", col, row);
         if(!board.clearValue(col, row)){
             System.out.printf("A posição [%s,%s] tem um valor fixo\n", col, row);
         }
     }
 
     private static void showCurrentGame() {
+        if(isNull(board)){ // SE o board estiver nulo
+            System.out.println("O jogo ainda não foi iniciado");
+            return;
+        }
+
+        Object[] args = new Object[81]; // Criando um Array de Objects com 81 posições
+        int argPos = 0;
+        for (int i = 0; i < BOARD_LIMIT; i++) { // Percorrendo a lista externa
+            for (var col : board.getSpaces()){ // Percorrendo as listas internas (Colunas)
+                args[argPos++] = " " + ((isNull(col.get(i).getActual())) ? " " : col.get(i).getActual()); // Verificando SE o espaço é Nulo, adiciona um espaço branco, SENÃO adiciona o valor contido
+            }
+        }
+        System.out.println("Seu jogo se encontra da seguinte forma");
+        System.out.printf((BOARD_TEMPLATE) + "\n", args); // Imprimindo o Board na tela
     }
 
     private static void showGameStatus() {
+        if(isNull(board)){ // SE o board estiver nulo
+            System.out.println("O jogo ainda não foi iniciado");
+            return;
+        }
+
+        System.out.printf("O jogo atualmente se encontra no status %s\n", board.getStatus().getLabel()); // Exibindo o Status Atual do jogo
+        if(board.hasErrors()){ // Verificando se o jogo contém erros
+            System.out.println("O jogo contém erros");
+        }
+        else{
+            System.out.println("O jogo não contém erros");
+        }
     }
 
     private static void clearGame() {
+        if(isNull(board)){ // SE o board estiver nulo
+            System.out.println("O jogo ainda não foi iniciado");
+            return;
+        }
+
+        System.out.println("Tem certeza que deseja limpar seu jogo e perder todo seu progresso?"); // Pergunta de confirmação
+        String confirm = sc.next(); // Entrada da resposta
+        while (!confirm.equalsIgnoreCase("sim") && !confirm.equalsIgnoreCase("não")){ // Repete a entrada de resposta enquanto o usuário NÃO colocar 'sim' ou 'não'
+            System.out.println("Informe 'sim' ou 'não'");
+            confirm = sc.next();
+        }
+        if(confirm.equalsIgnoreCase("sim")){ // Se responder 'sim', o tabuleiro reseta
+            board.reset();
+        }
     }
 
     private static void finishGame() {
+        if(isNull(board)){ // SE o board estiver nulo
+            System.out.println("O jogo ainda não foi iniciado");
+            return;
+        }
+
+        if(board.gameIsFinished()){ // Verifica SE o tabuleiro está terminado
+            System.out.println("Parabéns! Você concluiu o jogo");
+            showCurrentGame();
+            board = null;
+        }
+        else if (board.hasErrors()){ // Verifica se o tabuleiro contém erros
+            System.out.println("Seu jogo contém erros! Verifique seu board e ajuste-o");
+        }
+        else{ // Outra condição, caso não haja erros, mas tenha algum espaço pendente
+            System.out.println("Você ainda precisa preencher algum espaço");
+        }
     }
 
     private static int runUntilGetValidNumber(final int min, final int max){ // Metodo que repete a entrada do número até que insira um número válido
