@@ -1,15 +1,18 @@
 package br.com.dio.ui.custom.input;
 
 import br.com.dio.model.Space;
+import br.com.dio.service.EventEnum;
+import br.com.dio.service.EventListener;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
 
+import static br.com.dio.service.EventEnum.CLEAR_SPACE;
 import static java.awt.Font.PLAIN;
 
-public class NumberText extends JTextField {
+public class NumberText extends JTextField implements EventListener {
 
     private final Space space;
 
@@ -52,5 +55,12 @@ public class NumberText extends JTextField {
             }
 
         });// Quanto o texto for digitado no campo de texto, o campo irá propagar tal mudança
+    }
+
+    @Override
+    public void update(EventEnum eventType) {
+        if (eventType.equals(CLEAR_SPACE) && (this.isEnabled())){
+            this.setText("");
+        }
     }
 }
