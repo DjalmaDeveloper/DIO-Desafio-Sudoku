@@ -1,19 +1,21 @@
 package br.com.dio;
 
-import br.com.dio.ui.custom.frame.MainFrame;
-import br.com.dio.ui.custom.panel.MainPanel;
+import br.com.dio.ui.custom.screen.MainScreen;
 
-import javax.swing.*;
-import java.awt.*;
+import java.util.Map;
+import java.util.stream.Stream;
+
+import static java.util.stream.Collectors.toMap;
 
 public class UIMain {
 
     public static void main(String[] args) {
-        var dimension = new Dimension(600, 600);
-        JPanel mainPanel = new MainPanel(dimension);
-        JFrame mainFrame = new MainFrame(dimension, mainPanel);
-        mainFrame.revalidate();
-        mainFrame.repaint();
+        final Map<String, String> gameConfig = Stream.of(args) // Criando um Stream sobre os 'args'
+                .collect(toMap(
+                        k -> k.split(";")[0], // Separando os dois métodos por ponto-virgula(;), como foi feito nos 'args' acrescentados
+                        v -> v.split(";")[1]));
+        var mainScreen = new MainScreen(gameConfig);
+        mainScreen.buildMainScreen();
     }
 
 }
